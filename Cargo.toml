@@ -1,0 +1,28 @@
+[package]
+name = "deimos-reader"
+version = "0.1.0"
+edition = "2021"
+description = "Ultra-lightweight, fast, and memory-safe Open Source desktop PDF reader (Windows & Linux)"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/SOL12-NET/DeimosReader"
+
+[dependencies]
+eframe = { version = "0.31", default-features = true }
+egui = "0.31"
+pdfium-render = { version = "0.8", default-features = false, features = ["pdfium_latest"] }
+rfd = "0.15"
+crossbeam-channel = "0.5"
+zeroize = { version = "1.8", features = ["derive"] }
+lru = "0.13"
+png = "0.18"
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
