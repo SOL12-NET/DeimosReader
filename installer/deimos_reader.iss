@@ -1,7 +1,8 @@
 ; Inno Setup Script for Deimos Reader (Windows x64)
 
 #define MyAppName "Deimos Reader"
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "0.6 Beta"
+#define MyAppNumericVersion "0.6.0.0"
 #define MyAppPublisher "SOL12.NET"
 #define MyAppURL "https://github.com/SOL12-NET/DeimosReader"
 #define MyAppExeName "DeimosReader.exe"
@@ -10,10 +11,12 @@
 AppId={{8E9D5C2B-4A61-4F38-9C1E-7A2D4F8B1012}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+VersionInfoVersion={#MyAppNumericVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+LicenseFile=..\LICENSE
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
@@ -23,7 +26,7 @@ OutputDir=..\target\installer
 OutputBaseFilename=DeimosReader-Setup
 SetupIconFile=..\assets\mars_icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
-UninstallDisplayName={#MyAppName}
+UninstallDisplayName={#MyAppName} ({#MyAppVersion})
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -41,6 +44,7 @@ Name: "associatepdf"; Description: "Associate .pdf files with {#MyAppName}"; Gro
 Source: "..\target\release\deimos-reader.exe"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion
 Source: "..\pdfium.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\mars_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\mars_icon.ico"

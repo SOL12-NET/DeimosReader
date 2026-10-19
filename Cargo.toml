@@ -1,6 +1,6 @@
 [package]
 name = "deimos-reader"
-version = "0.1.0"
+version = "0.6.0-beta"
 edition = "2021"
 description = "Ultra-lightweight, fast, and memory-safe Open Source desktop PDF reader (Windows & Linux)"
 license = "MIT"

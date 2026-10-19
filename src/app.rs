@@ -1,5 +1,5 @@
 //! Global application state, tab bar, virtualized page viewport,
-//! password unlock card, Drag & Drop support, and keyboard shortcuts.
+//! password unlock card, open-source licenses dialog, Drag & Drop support, and keyboard shortcuts.
 
 use std::collections::HashSet;
 use std::io::Cursor;
@@ -16,6 +16,12 @@ use crate::cache::TextureCache;
 use crate::tab::{Tab, TabId, TabState, PAGE_SPACING};
 use crate::worker::{PdfWorkerHandle, RenderRequest, RenderResponse};
 
+/// Current application version displayed on the welcome screen and in the Licenses window.
+pub const APP_VERSION_LABEL: &str = "Version 0.6 Beta";
+
+/// Embedded MIT License of Deimos Reader.
+const DEIMOS_MIT_LICENSE: &str = include_str!("../LICENSE");
+
 /// Embedded Orbitron Bold (700) font matching the title typography of `ifconfig.sol12.net`.
 const ORBITRON_BOLD_TTF: &[u8] = include_bytes!("../assets/Orbitron-Bold.ttf");
 
@@ -24,6 +30,100 @@ const MARS_LOGO_PNG: &[u8] = include_bytes!("../assets/mars_logo.png");
 
 /// Font family name registered for the `"Deimos Reader"` title.
 const ORBITRON_FAMILY: &str = "Orbitron";
+
+/// Third-party open source component license entry.
+struct ThirdPartyLicense {
+    name: &'static str,
+    version_or_author: &'static str,
+    license_name: &'static str,
+    repository_url: &'static str,
+    notice: &'static str,
+}
+
+/// Complete list of third-party open-source libraries and assets used by Deimos Reader.
+const THIRD_PARTY_LICENSES: &[ThirdPartyLicense] = &[
+    ThirdPartyLicense {
+        name: "PDFium",
+        version_or_author: "Google LLC / The Chromium Authors & Foxit Software Inc.",
+        license_name: "BSD 3-Clause / Apache-2.0",
+        repository_url: "https://pdfium.googlesource.com/pdfium/",
+        notice: "Copyright 2014 The PDFium Authors. All rights reserved.\n\
+Redistribution and use in source and binary forms, with or without modification, are permitted \
+provided that the conditions of the 3-Clause BSD License are met.",
+    },
+    ThirdPartyLicense {
+        name: "pdfium-render",
+        version_or_author: "0.8 — Alastair Carey",
+        license_name: "MIT OR Apache-2.0",
+        repository_url: "https://github.com/ajrcarey/pdfium-render",
+        notice: "Copyright (c) 2021-2026 Alastair Carey.\n\
+High-level idiomatic Rust wrapper around Pdfium. Licensed under either of Apache License, \
+Version 2.0 or MIT license at your option.",
+    },
+    ThirdPartyLicense {
+        name: "egui & eframe",
+        version_or_author: "0.31 — Emil Ernerfeldt & Rerun Technologies AB",
+        license_name: "MIT OR Apache-2.0",
+        repository_url: "https://github.com/emilk/egui",
+        notice: "Copyright (c) 2018-2026 Emil Ernerfeldt <emil.ernerfeldt@gmail.com>.\n\
+Immediate mode GUI library and native windowing framework in Rust. Licensed under MIT or Apache-2.0.",
+    },
+    ThirdPartyLicense {
+        name: "rfd (Rusty File Dialog)",
+        version_or_author: "0.15 — PolyMeilex",
+        license_name: "MIT",
+        repository_url: "https://github.com/PolyMeilex/rfd",
+        notice: "Copyright (c) 2020 PolyMeilex.\n\
+Native OS file dialogs for Windows (Win32) and Linux (GTK3 / XDG Desktop Portal). Licensed under MIT.",
+    },
+    ThirdPartyLicense {
+        name: "crossbeam-channel",
+        version_or_author: "0.5 — The Crossbeam Project Developers",
+        license_name: "MIT OR Apache-2.0",
+        repository_url: "https://github.com/crossbeam-rs/crossbeam",
+        notice: "Copyright (c) 2019 The Crossbeam Project Developers.\n\
+Multi-producer multi-consumer channels for message passing. Licensed under MIT or Apache-2.0.",
+    },
+    ThirdPartyLicense {
+        name: "zeroize",
+        version_or_author: "1.8 — The RustCrypto Project Developers",
+        license_name: "MIT OR Apache-2.0",
+        repository_url: "https://github.com/RustCrypto/utils/tree/master/zeroize",
+        notice: "Copyright (c) 2018-2026 The RustCrypto Project Developers.\n\
+Securely zeroizes secrets from memory using volatile writes and compiler fences. Licensed under MIT or Apache-2.0.",
+    },
+    ThirdPartyLicense {
+        name: "lru",
+        version_or_author: "0.13 — Jerome Froelich",
+        license_name: "MIT",
+        repository_url: "https://github.com/jeromefroe/lru-rs",
+        notice: "Copyright (c) 2016 Jerome Froelich.\n\
+Bounded Least-Recently-Used (LRU) cache implementation in Rust. Licensed under MIT.",
+    },
+    ThirdPartyLicense {
+        name: "png",
+        version_or_author: "0.18 — The image-rs Developers",
+        license_name: "MIT OR Apache-2.0",
+        repository_url: "https://github.com/image-rs/image-png",
+        notice: "Copyright (c) 2015-2026 The image-rs Developers.\n\
+Pure-Rust PNG decoder and encoder. Licensed under MIT or Apache-2.0.",
+    },
+    ThirdPartyLicense {
+        name: "Orbitron Typeface",
+        version_or_author: "Matt McInerney / The League of Moveable Type",
+        license_name: "SIL Open Font License 1.1 (OFL-1.1)",
+        repository_url: "https://github.com/theleagueof/orbitron",
+        notice: "Copyright (c) 2009-2020 Matt McInerney (matt@pixelspread.com).\n\
+This Font Software is licensed under the SIL Open Font License, Version 1.1.",
+    },
+    ThirdPartyLicense {
+        name: "Mars Surface Texture",
+        version_or_author: "Solar System Scope / NASA Goddard Space Flight Center",
+        license_name: "CC BY 4.0",
+        repository_url: "https://www.solarsystemscope.com/textures/",
+        notice: "Mars equirectangular planetary map courtesy of Solar System Scope / NASA (Creative Commons Attribution 4.0 International).",
+    },
+];
 
 /// Decodes the embedded `mars_logo.png` into raw RGBA8 bytes and `(width, height)`.
 fn decode_mars_logo_rgba() -> Option<(Vec<u8>, u32, u32)> {
@@ -82,6 +182,8 @@ pub struct DeimosApp {
     in_flight: HashSet<InFlightKey>,
     /// Static GPU texture for the Mars planet brand logo.
     mars_logo_texture: Option<TextureHandle>,
+    /// Controls visibility of the Open Source Licenses window.
+    show_licenses_window: bool,
 }
 
 impl DeimosApp {
@@ -106,6 +208,7 @@ impl DeimosApp {
             texture_cache: TextureCache::default(),
             in_flight: HashSet::new(),
             mars_logo_texture,
+            show_licenses_window: false,
         };
 
         for path in initial_files {
@@ -284,7 +387,7 @@ impl DeimosApp {
     }
 
     /// Handles all keyboard shortcuts (`Ctrl+O`, `Ctrl+W`, `Ctrl+Tab`, `Ctrl+Shift+Tab`,
-    /// `Ctrl++`, `Ctrl+-`, `Ctrl+0`, `Ctrl+Wheel`) and Drag & Drop file events.
+    /// `Ctrl++`, `Ctrl+-`, `Ctrl+0`, `Ctrl+Wheel` in 5% notches) and Drag & Drop file events.
     fn handle_shortcuts_and_inputs(&mut self, ctx: &egui::Context) {
         let mut open_requested = false;
         let mut close_active = false;
@@ -315,7 +418,7 @@ impl DeimosApp {
                 zoom_action = Some(ZoomAction::Reset);
             }
 
-            // Ctrl + '+' (or '=' on keyboards where '+' shares the '=' key): Zoom in
+            // Ctrl + '+' (or '=' on keyboards where '+' shares the '=' key): Zoom in (25%)
             if input.consume_key(egui::Modifiers::COMMAND, Key::Plus)
                 || input.consume_key(egui::Modifiers::COMMAND | egui::Modifiers::SHIFT, Key::Plus)
                 || input.consume_key(egui::Modifiers::COMMAND, Key::Equals)
@@ -324,26 +427,28 @@ impl DeimosApp {
                 zoom_action = Some(ZoomAction::In);
             }
 
-            // Ctrl + '-': Zoom out
+            // Ctrl + '-': Zoom out (25%)
             if input.consume_key(egui::Modifiers::COMMAND, Key::Minus) {
                 zoom_action = Some(ZoomAction::Out);
             }
 
-            // Ctrl + Mouse Wheel: Zoom in / out
+            // Ctrl + Mouse Wheel: Zoom in / out in strict 5% steps
             if input.modifiers.command {
                 let zoom_delta = input.zoom_delta();
-                if (zoom_delta - 1.0).abs() > 0.01 {
+                if (zoom_delta - 1.0).abs() > 0.005 {
                     if zoom_delta > 1.0 {
-                        zoom_action = Some(ZoomAction::In);
+                        zoom_action = Some(ZoomAction::WheelIn);
                     } else {
-                        zoom_action = Some(ZoomAction::Out);
+                        zoom_action = Some(ZoomAction::WheelOut);
                     }
+                    input.raw_scroll_delta.y = 0.0;
                 } else if input.raw_scroll_delta.y.abs() > 0.1 {
                     if input.raw_scroll_delta.y > 0.0 {
-                        zoom_action = Some(ZoomAction::In);
+                        zoom_action = Some(ZoomAction::WheelIn);
                     } else {
-                        zoom_action = Some(ZoomAction::Out);
+                        zoom_action = Some(ZoomAction::WheelOut);
                     }
+                    input.raw_scroll_delta.y = 0.0;
                 }
             }
         });
@@ -370,6 +475,8 @@ impl DeimosApp {
                         let changed = match action {
                             ZoomAction::In => tab.zoom_in(),
                             ZoomAction::Out => tab.zoom_out(),
+                            ZoomAction::WheelIn => tab.zoom_in_wheel(),
+                            ZoomAction::WheelOut => tab.zoom_out_wheel(),
                             ZoomAction::Reset => tab.reset_zoom(),
                         };
                         if changed {
@@ -577,6 +684,8 @@ impl DeimosApp {
                                     let changed = match op {
                                         ZoomAction::In => tab.zoom_in(),
                                         ZoomAction::Out => tab.zoom_out(),
+                                        ZoomAction::WheelIn => tab.zoom_in_wheel(),
+                                        ZoomAction::WheelOut => tab.zoom_out_wheel(),
                                         ZoomAction::Reset => tab.reset_zoom(),
                                     };
                                     if changed {
@@ -691,9 +800,13 @@ impl DeimosApp {
     }
 
     /// Renders the welcome screen when no document tab is open:
-    /// displays the static high-resolution Mars planet to the left of `"Deimos Reader"`
-    /// in Orbitron Bold (matching `ifconfig.sol12.net`), with the standard font used below.
+    /// - Centered: static high-resolution Mars planet to the left of `"Deimos Reader"` in Orbitron Bold,
+    ///   with the standard proportional font used below.
+    /// - Bottom-left corner: current software version (`"Version 0.6 Beta"`).
+    /// - Bottom-right corner: `"Licenses"` button opening the Open Source Licenses window.
     fn render_empty_state(&mut self, ui: &mut egui::Ui) {
+        let panel_rect = ui.max_rect();
+
         ui.vertical_centered(|ui| {
             ui.add_space((ui.available_height() * 0.35).max(40.0));
 
@@ -751,6 +864,190 @@ impl DeimosApp {
                 self.prompt_open_files();
             }
         });
+
+        // Bottom footer bar pinned to the bottom-left and bottom-right corners of the welcome screen
+        let footer_height = 32.0_f32;
+        let footer_margin_x = 16.0_f32;
+        let footer_margin_bottom = 12.0_f32;
+        let footer_rect = Rect::from_min_max(
+            Pos2::new(
+                panel_rect.min.x + footer_margin_x,
+                (panel_rect.max.y - footer_height - footer_margin_bottom).max(panel_rect.min.y),
+            ),
+            Pos2::new(
+                panel_rect.max.x - footer_margin_x,
+                panel_rect.max.y - footer_margin_bottom,
+            ),
+        );
+
+        let mut footer_ui = ui.new_child(
+            egui::UiBuilder::new()
+                .max_rect(footer_rect)
+                .layout(Layout::left_to_right(Align::Center)),
+        );
+
+        footer_ui.label(
+            RichText::new(APP_VERSION_LABEL)
+                .size(12.5)
+                .color(Color32::from_rgb(125, 130, 142)),
+        );
+
+        footer_ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+            let licenses_btn = ui.add(
+                egui::Button::new(
+                    RichText::new("Licenses")
+                        .size(12.5)
+                        .color(Color32::from_rgb(195, 200, 212)),
+                )
+                .min_size(Vec2::new(86.0, 26.0)),
+            );
+            if licenses_btn
+                .on_hover_text("View Deimos Reader MIT License and Open Source notices")
+                .clicked()
+            {
+                self.show_licenses_window = true;
+            }
+        });
+    }
+
+    /// Renders the modal/floating window displaying the Deimos Reader MIT License and all
+    /// third-party Open Source component licenses.
+    fn render_licenses_window(&mut self, ctx: &egui::Context) {
+        if !self.show_licenses_window {
+            return;
+        }
+
+        let mut open = self.show_licenses_window;
+        let mut close_clicked = false;
+
+        egui::Window::new("Open Source Licenses — Deimos Reader")
+            .open(&mut open)
+            .collapsible(false)
+            .resizable(true)
+            .default_size([640.0, 520.0])
+            .min_size([460.0, 340.0])
+            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+            .show(ctx, |ui| {
+                ui.vertical(|ui| {
+                    ui.horizontal(|ui| {
+                        if let Some(tex) = &self.mars_logo_texture {
+                            let (rect, _) =
+                                ui.allocate_exact_size(Vec2::splat(28.0), Sense::hover());
+                            let uv = Rect::from_min_max(Pos2::new(0.0, 0.0), Pos2::new(1.0, 1.0));
+                            ui.painter().image(tex.id(), rect, uv, Color32::WHITE);
+                            ui.add_space(6.0);
+                        }
+                        ui.label(
+                            RichText::new("Deimos Reader")
+                                .font(FontId::new(17.0, FontFamily::Name(ORBITRON_FAMILY.into())))
+                                .color(Color32::WHITE),
+                        );
+                        ui.add_space(6.0);
+                        ui.label(
+                            RichText::new(format!("({APP_VERSION_LABEL})"))
+                                .size(13.0)
+                                .color(Color32::from_rgb(160, 166, 178)),
+                        );
+                    });
+
+                    ui.add_space(8.0);
+                    ui.separator();
+                    ui.add_space(6.0);
+
+                    let scroll_height = (ui.available_height() - 44.0).max(180.0);
+                    ScrollArea::vertical()
+                        .id_salt("deimos_licenses_scroll")
+                        .max_height(scroll_height)
+                        .auto_shrink([false, false])
+                        .show(ui, |ui| {
+                            // Section 1: Deimos Reader MIT License
+                            Frame::NONE
+                                .fill(Color32::from_rgb(22, 24, 28))
+                                .corner_radius(CornerRadius::same(6))
+                                .inner_margin(Margin::same(14))
+                                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(52, 56, 66)))
+                                .show(ui, |ui| {
+                                    ui.set_width(ui.available_width());
+                                    ui.label(
+                                        RichText::new("Deimos Reader — MIT License")
+                                            .size(14.5)
+                                            .strong()
+                                            .color(Color32::from_rgb(249, 115, 22)),
+                                    );
+                                    ui.add_space(6.0);
+                                    ui.label(
+                                        RichText::new(DEIMOS_MIT_LICENSE.trim())
+                                            .monospace()
+                                            .size(12.0)
+                                            .color(Color32::from_rgb(205, 210, 220)),
+                                    );
+                                });
+
+                            ui.add_space(14.0);
+                            ui.label(
+                                RichText::new("Third-Party Open Source Software & Assets")
+                                    .size(14.5)
+                                    .strong()
+                                    .color(Color32::WHITE),
+                            );
+                            ui.add_space(6.0);
+
+                            for item in THIRD_PARTY_LICENSES {
+                                Frame::NONE
+                                    .fill(Color32::from_rgb(22, 24, 28))
+                                    .corner_radius(CornerRadius::same(6))
+                                    .inner_margin(Margin::same(12))
+                                    .stroke(Stroke::new(1.0_f32, Color32::from_rgb(44, 47, 56)))
+                                    .show(ui, |ui| {
+                                        ui.set_width(ui.available_width());
+                                        ui.horizontal_wrapped(|ui| {
+                                            ui.label(
+                                                RichText::new(item.name)
+                                                    .size(13.5)
+                                                    .strong()
+                                                    .color(Color32::WHITE),
+                                            );
+                                            ui.label(
+                                                RichText::new(format!("— {}", item.license_name))
+                                                    .size(12.5)
+                                                    .color(Color32::from_rgb(249, 115, 22)),
+                                            );
+                                        });
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "{} • {}",
+                                                item.version_or_author, item.repository_url
+                                            ))
+                                            .size(11.5)
+                                            .color(Color32::from_rgb(145, 150, 162)),
+                                        );
+                                        ui.add_space(4.0);
+                                        ui.label(
+                                            RichText::new(item.notice)
+                                                .size(12.0)
+                                                .color(Color32::from_rgb(195, 200, 210)),
+                                        );
+                                    });
+                                ui.add_space(8.0);
+                            }
+                        });
+
+                    ui.add_space(8.0);
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if ui
+                            .add(
+                                egui::Button::new(RichText::new("Close").size(13.5))
+                                    .min_size(Vec2::new(96.0, 28.0)),
+                            )
+                            .clicked()
+                        {
+                            close_clicked = true;
+                        }
+                    });
+                });
+            });
+
+        self.show_licenses_window = open && !close_clicked;
     }
 
     /// In the `Locked` state, displays a centered card containing:
@@ -962,11 +1259,13 @@ impl DeimosApp {
     }
 }
 
-/// Zoom actions triggered by keyboard shortcuts, mouse wheel, or toolbar buttons.
+/// Zoom actions triggered by keyboard shortcuts, mouse wheel (5% steps), or toolbar buttons (25% steps).
 #[derive(Debug, Clone, Copy)]
 enum ZoomAction {
     In,
     Out,
+    WheelIn,
+    WheelOut,
     Reset,
 }
 
@@ -976,5 +1275,6 @@ impl eframe::App for DeimosApp {
         self.handle_shortcuts_and_inputs(ctx);
         self.render_top_bar(ctx);
         self.render_central_panel(ctx);
+        self.render_licenses_window(ctx);
     }
 }

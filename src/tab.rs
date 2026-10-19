@@ -9,8 +9,10 @@ pub const MIN_ZOOM: f32 = 0.25;
 pub const MAX_ZOOM: f32 = 4.00;
 /// Default zoom level (100%).
 pub const DEFAULT_ZOOM: f32 = 1.00;
-/// Zoom increment/decrement step (25%).
+/// Zoom increment/decrement step for keyboard/toolbar buttons (25%).
 pub const ZOOM_STEP: f32 = 0.25;
+/// Zoom increment/decrement step for Ctrl + Mouse Wheel (5%).
+pub const WHEEL_ZOOM_STEP: f32 = 0.05;
 /// Vertical spacing between two consecutive pages in the scroll area (in UI points).
 pub const PAGE_SPACING: f32 = 14.0;
 
@@ -119,16 +121,30 @@ impl Tab {
         }
     }
 
-    /// Zooms in by one step (`+25%`).
+    /// Zooms in by one standard step (`+25%`).
     pub fn zoom_in(&mut self) -> bool {
         let next = ((self.zoom / ZOOM_STEP).floor() + 1.0) * ZOOM_STEP;
         self.set_zoom(next)
     }
 
-    /// Zooms out by one step (`-25%`).
+    /// Zooms out by one standard step (`-25%`).
     pub fn zoom_out(&mut self) -> bool {
         let next = ((self.zoom / ZOOM_STEP).ceil() - 1.0) * ZOOM_STEP;
         self.set_zoom(next)
+    }
+
+    /// Zooms in by one fine mouse-wheel notch (`+5%`).
+    pub fn zoom_in_wheel(&mut self) -> bool {
+        let next_pct = (self.zoom_pct().saturating_add(5)).min(400);
+        let aligned_pct = (next_pct / 5) * 5;
+        self.set_zoom(f32::from(aligned_pct) * WHEEL_ZOOM_STEP / 5.0)
+    }
+
+    /// Zooms out by one fine mouse-wheel notch (`-5%`).
+    pub fn zoom_out_wheel(&mut self) -> bool {
+        let next_pct = self.zoom_pct().saturating_sub(5).max(25);
+        let aligned_pct = next_pct.div_ceil(5) * 5;
+        self.set_zoom(f32::from(aligned_pct) * WHEEL_ZOOM_STEP / 5.0)
     }
 
     /// Resets the zoom level to 100%.
@@ -266,5 +282,42 @@ impl Tab {
 impl Drop for Tab {
     fn drop(&mut self) {
         self.password_input.zeroize();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_wheel_zoom_steps_by_5_percent() {
+        let mut tab = Tab::new(TabId(1), PathBuf::from("sample.pdf"));
+        assert_eq!(tab.zoom_pct(), 100);
+
+        assert!(tab.zoom_in_wheel());
+        assert_eq!(tab.zoom_pct(), 105);
+
+        assert!(tab.zoom_in_wheel());
+        assert_eq!(tab.zoom_pct(), 110);
+
+        assert!(tab.zoom_out_wheel());
+        assert_eq!(tab.zoom_pct(), 105);
+
+        assert!(tab.zoom_out_wheel());
+        assert_eq!(tab.zoom_pct(), 100);
+
+        assert!(tab.zoom_out_wheel());
+        assert_eq!(tab.zoom_pct(), 95);
+
+        // Verify bounds clamping at 25% and 400%
+        tab.set_zoom(MIN_ZOOM);
+        assert_eq!(tab.zoom_pct(), 25);
+        assert!(!tab.zoom_out_wheel());
+        assert_eq!(tab.zoom_pct(), 25);
+
+        tab.set_zoom(MAX_ZOOM);
+        assert_eq!(tab.zoom_pct(), 400);
+        assert!(!tab.zoom_in_wheel());
+        assert_eq!(tab.zoom_pct(), 400);
     }
 }
