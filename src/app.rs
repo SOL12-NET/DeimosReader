@@ -865,8 +865,8 @@ impl DeimosApp {
             }
         });
 
-        // Bottom footer bar pinned to the bottom-left and bottom-right corners of the welcome screen
-        let footer_height = 32.0_f32;
+            // Bottom footer bar pinned to the bottom-left and bottom-right corners of the welcome screen
+        let footer_height = 34.0_f32;
         let footer_margin_x = 16.0_f32;
         let footer_margin_bottom = 12.0_f32;
         let footer_rect = Rect::from_min_max(
@@ -886,10 +886,62 @@ impl DeimosApp {
                 .layout(Layout::left_to_right(Align::Center)),
         );
 
+        // Small but clearly visible Mars planet logo on the far bottom-left
+        if let Some(tex) = &self.mars_logo_texture {
+            let small_logo_size = 22.0_f32;
+            let (logo_rect, _) =
+                footer_ui.allocate_exact_size(Vec2::splat(small_logo_size), Sense::hover());
+            let uv = Rect::from_min_max(Pos2::new(0.0, 0.0), Pos2::new(1.0, 1.0));
+            footer_ui
+                .painter()
+                .image(tex.id(), logo_rect, uv, Color32::WHITE);
+            footer_ui.add_space(7.0);
+        }
+
+        // "SOL12 Software" in Orbitron Bold with "12" in SOL12 orange (#F97316)
+        let brand_font = FontId::new(14.0, FontFamily::Name(ORBITRON_FAMILY.into()));
+        let mut brand_job = egui::text::LayoutJob::default();
+        brand_job.append(
+            "SOL",
+            0.0,
+            egui::TextFormat {
+                font_id: brand_font.clone(),
+                color: Color32::WHITE,
+                ..Default::default()
+            },
+        );
+        brand_job.append(
+            "12",
+            0.0,
+            egui::TextFormat {
+                font_id: brand_font.clone(),
+                color: Color32::from_rgb(249, 115, 22),
+                ..Default::default()
+            },
+        );
+        brand_job.append(
+            " Software",
+            0.0,
+            egui::TextFormat {
+                font_id: brand_font,
+                color: Color32::WHITE,
+                ..Default::default()
+            },
+        );
+        footer_ui.label(brand_job);
+
+        footer_ui.add_space(8.0);
+        footer_ui.label(
+            RichText::new("•")
+                .size(12.5)
+                .color(Color32::from_rgb(90, 95, 108)),
+        );
+        footer_ui.add_space(8.0);
+
         footer_ui.label(
             RichText::new(APP_VERSION_LABEL)
                 .size(12.5)
-                .color(Color32::from_rgb(125, 130, 142)),
+                .color(Color32::from_rgb(135, 140, 152)),
         );
 
         footer_ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
@@ -908,6 +960,22 @@ impl DeimosApp {
                 self.show_licenses_window = true;
             }
         });
+    }
+
+    /// Configures a scoped UI so that `ScrollArea` renders its scrollbar thumb in SOL12 orange (`#F97316`).
+    fn apply_orange_scrollbar_visuals(ui: &mut egui::Ui) {
+        let orange = Color32::from_rgb(249, 115, 22);
+        let orange_hover = Color32::from_rgb(251, 146, 60);
+        let orange_active = Color32::from_rgb(234, 88, 12);
+
+        ui.spacing_mut().scroll.foreground_color = true;
+        ui.spacing_mut().scroll.dormant_handle_opacity = 0.80;
+        ui.spacing_mut().scroll.active_handle_opacity = 0.95;
+        ui.spacing_mut().scroll.interact_handle_opacity = 1.0;
+
+        ui.visuals_mut().widgets.inactive.fg_stroke.color = orange;
+        ui.visuals_mut().widgets.hovered.fg_stroke.color = orange_hover;
+        ui.visuals_mut().widgets.active.fg_stroke.color = orange_active;
     }
 
     /// Renders the modal/floating window displaying the Deimos Reader MIT License and all
@@ -955,82 +1023,100 @@ impl DeimosApp {
                     ui.add_space(6.0);
 
                     let scroll_height = (ui.available_height() - 44.0).max(180.0);
-                    ScrollArea::vertical()
-                        .id_salt("deimos_licenses_scroll")
-                        .max_height(scroll_height)
-                        .auto_shrink([false, false])
-                        .show(ui, |ui| {
-                            // Section 1: Deimos Reader MIT License
-                            Frame::NONE
-                                .fill(Color32::from_rgb(22, 24, 28))
-                                .corner_radius(CornerRadius::same(6))
-                                .inner_margin(Margin::same(14))
-                                .stroke(Stroke::new(1.0_f32, Color32::from_rgb(52, 56, 66)))
-                                .show(ui, |ui| {
-                                    ui.set_width(ui.available_width());
-                                    ui.label(
-                                        RichText::new("Deimos Reader — MIT License")
-                                            .size(14.5)
-                                            .strong()
-                                            .color(Color32::from_rgb(249, 115, 22)),
-                                    );
-                                    ui.add_space(6.0);
-                                    ui.label(
-                                        RichText::new(DEIMOS_MIT_LICENSE.trim())
-                                            .monospace()
-                                            .size(12.0)
-                                            .color(Color32::from_rgb(205, 210, 220)),
-                                    );
-                                });
+                    let default_inactive_fg = ui.visuals().widgets.inactive.fg_stroke;
+                    let default_hovered_fg = ui.visuals().widgets.hovered.fg_stroke;
+                    let default_active_fg = ui.visuals().widgets.active.fg_stroke;
 
-                            ui.add_space(14.0);
-                            ui.label(
-                                RichText::new("Third-Party Open Source Software & Assets")
-                                    .size(14.5)
-                                    .strong()
-                                    .color(Color32::WHITE),
-                            );
-                            ui.add_space(6.0);
+                    ui.scope(|ui| {
+                        Self::apply_orange_scrollbar_visuals(ui);
 
-                            for item in THIRD_PARTY_LICENSES {
+                        ScrollArea::vertical()
+                            .id_salt("deimos_licenses_scroll")
+                            .max_height(scroll_height)
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                ui.visuals_mut().widgets.inactive.fg_stroke = default_inactive_fg;
+                                ui.visuals_mut().widgets.hovered.fg_stroke = default_hovered_fg;
+                                ui.visuals_mut().widgets.active.fg_stroke = default_active_fg;
+
+                                // Section 1: Deimos Reader MIT License
                                 Frame::NONE
                                     .fill(Color32::from_rgb(22, 24, 28))
                                     .corner_radius(CornerRadius::same(6))
-                                    .inner_margin(Margin::same(12))
-                                    .stroke(Stroke::new(1.0_f32, Color32::from_rgb(44, 47, 56)))
+                                    .inner_margin(Margin::same(14))
+                                    .stroke(Stroke::new(1.0_f32, Color32::from_rgb(52, 56, 66)))
                                     .show(ui, |ui| {
                                         ui.set_width(ui.available_width());
-                                        ui.horizontal_wrapped(|ui| {
-                                            ui.label(
-                                                RichText::new(item.name)
-                                                    .size(13.5)
-                                                    .strong()
-                                                    .color(Color32::WHITE),
-                                            );
-                                            ui.label(
-                                                RichText::new(format!("— {}", item.license_name))
-                                                    .size(12.5)
-                                                    .color(Color32::from_rgb(249, 115, 22)),
-                                            );
-                                        });
                                         ui.label(
-                                            RichText::new(format!(
-                                                "{} • {}",
-                                                item.version_or_author, item.repository_url
-                                            ))
-                                            .size(11.5)
-                                            .color(Color32::from_rgb(145, 150, 162)),
+                                            RichText::new("Deimos Reader — MIT License")
+                                                .size(14.5)
+                                                .strong()
+                                                .color(Color32::from_rgb(249, 115, 22)),
                                         );
-                                        ui.add_space(4.0);
+                                        ui.add_space(6.0);
                                         ui.label(
-                                            RichText::new(item.notice)
+                                            RichText::new(DEIMOS_MIT_LICENSE.trim())
+                                                .monospace()
                                                 .size(12.0)
-                                                .color(Color32::from_rgb(195, 200, 210)),
+                                                .color(Color32::from_rgb(205, 210, 220)),
                                         );
                                     });
-                                ui.add_space(8.0);
-                            }
-                        });
+
+                                ui.add_space(14.0);
+                                ui.label(
+                                    RichText::new("Third-Party Open Source Software & Assets")
+                                        .size(14.5)
+                                        .strong()
+                                        .color(Color32::WHITE),
+                                );
+                                ui.add_space(6.0);
+
+                                for item in THIRD_PARTY_LICENSES {
+                                    Frame::NONE
+                                        .fill(Color32::from_rgb(22, 24, 28))
+                                        .corner_radius(CornerRadius::same(6))
+                                        .inner_margin(Margin::same(12))
+                                        .stroke(Stroke::new(
+                                            1.0_f32,
+                                            Color32::from_rgb(44, 47, 56),
+                                        ))
+                                        .show(ui, |ui| {
+                                            ui.set_width(ui.available_width());
+                                            ui.horizontal_wrapped(|ui| {
+                                                ui.label(
+                                                    RichText::new(item.name)
+                                                        .size(13.5)
+                                                        .strong()
+                                                        .color(Color32::WHITE),
+                                                );
+                                                ui.label(
+                                                    RichText::new(format!(
+                                                        "— {}",
+                                                        item.license_name
+                                                    ))
+                                                    .size(12.5)
+                                                    .color(Color32::from_rgb(249, 115, 22)),
+                                                );
+                                            });
+                                            ui.label(
+                                                RichText::new(format!(
+                                                    "{} • {}",
+                                                    item.version_or_author, item.repository_url
+                                                ))
+                                                .size(11.5)
+                                                .color(Color32::from_rgb(145, 150, 162)),
+                                            );
+                                            ui.add_space(4.0);
+                                            ui.label(
+                                                RichText::new(item.notice)
+                                                    .size(12.0)
+                                                    .color(Color32::from_rgb(195, 200, 210)),
+                                            );
+                                        });
+                                    ui.add_space(8.0);
+                                }
+                            });
+                    });
 
                     ui.add_space(8.0);
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
@@ -1163,97 +1249,116 @@ impl DeimosApp {
         let zoom_pct = self.tabs[tab_idx].zoom_pct();
         let pending_scroll = self.tabs[tab_idx].pending_scroll_to_y.take();
 
-        let mut scroll_area = ScrollArea::vertical()
-            .id_salt(("deimos_pdf_scroll", tab_id.0))
-            .auto_shrink([false, false]);
+        let default_inactive_fg = ui.visuals().widgets.inactive.fg_stroke;
+        let default_hovered_fg = ui.visuals().widgets.hovered.fg_stroke;
+        let default_active_fg = ui.visuals().widgets.active.fg_stroke;
 
-        if let Some(y_offset) = pending_scroll {
-            scroll_area = scroll_area.vertical_scroll_offset(y_offset);
-        }
+        let scroll_out = ui
+            .scope(|ui| {
+                Self::apply_orange_scrollbar_visuals(ui);
 
-        let scroll_out = scroll_area.show_viewport(ui, |ui, viewport_rect| {
-            ui.set_min_width(ui.available_width());
+                let mut scroll_area = ScrollArea::vertical()
+                    .id_salt(("deimos_pdf_scroll", tab_id.0))
+                    .auto_shrink([false, false]);
 
-            // Compute pages currently visible inside the scroll viewport rectangle
-            let visible_range = self.tabs[tab_idx]
-                .compute_visible_pages(viewport_rect.min.y, viewport_rect.max.y);
+                if let Some(y_offset) = pending_scroll {
+                    scroll_area = scroll_area.vertical_scroll_offset(y_offset);
+                }
 
-            if let Some(range) = visible_range {
-                self.tabs[tab_idx].current_page = range.current_page;
+                scroll_area.show_viewport(ui, |ui, viewport_rect| {
+                    ui.visuals_mut().widgets.inactive.fg_stroke = default_inactive_fg;
+                    ui.visuals_mut().widgets.hovered.fg_stroke = default_hovered_fg;
+                    ui.visuals_mut().widgets.active.fg_stroke = default_active_fg;
 
-                // Cancel queued renders outside the active pre-fetch window `[request_start..=request_end]`
-                self.worker.send(RenderRequest::CancelObsolete {
-                    tab_id,
-                    active_zoom_pct: zoom_pct,
-                    keep_range: Some((range.request_start, range.request_end)),
-                });
+                    ui.set_min_width(ui.available_width());
 
-                // Request only pages in `[request_start..=request_end]` that are neither cached nor in flight
-                for page_idx in range.request_start..=range.request_end {
-                    if page_idx < page_count
-                        && !self.texture_cache.contains(tab_id, page_idx, zoom_pct)
-                    {
-                        let key = InFlightKey {
+                    // Compute pages currently visible inside the scroll viewport rectangle
+                    let visible_range = self.tabs[tab_idx]
+                        .compute_visible_pages(viewport_rect.min.y, viewport_rect.max.y);
+
+                    if let Some(range) = visible_range {
+                        self.tabs[tab_idx].current_page = range.current_page;
+
+                        // Cancel queued renders outside the active pre-fetch window `[request_start..=request_end]`
+                        self.worker.send(RenderRequest::CancelObsolete {
                             tab_id,
-                            page_index: page_idx,
-                            zoom_pct,
-                        };
-                        if self.in_flight.insert(key) {
-                            let effective_scale = zoom * pixels_per_point;
-                            self.worker.send(RenderRequest::RenderPage {
-                                tab_id,
-                                page_index: page_idx,
-                                zoom_pct,
-                                scale: effective_scale,
+                            active_zoom_pct: zoom_pct,
+                            keep_range: Some((range.request_start, range.request_end)),
+                        });
+
+                        // Request only pages in `[request_start..=request_end]` that are neither cached nor in flight
+                        for page_idx in range.request_start..=range.request_end {
+                            if page_idx < page_count
+                                && !self.texture_cache.contains(tab_id, page_idx, zoom_pct)
+                            {
+                                let key = InFlightKey {
+                                    tab_id,
+                                    page_index: page_idx,
+                                    zoom_pct,
+                                };
+                                if self.in_flight.insert(key) {
+                                    let effective_scale = zoom * pixels_per_point;
+                                    self.worker.send(RenderRequest::RenderPage {
+                                        tab_id,
+                                        page_index: page_idx,
+                                        zoom_pct,
+                                        scale: effective_scale,
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    ui.vertical_centered(|ui| {
+                        ui.spacing_mut().item_spacing.y = 0.0;
+                        ui.add_space(PAGE_SPACING);
+
+                        for (page_idx, &(w_pts, h_pts)) in page_dimensions.iter().enumerate() {
+                            let page_size =
+                                Vec2::new((w_pts * zoom).max(1.0), (h_pts * zoom).max(1.0));
+                            let (rect, _response) =
+                                ui.allocate_exact_size(page_size, Sense::hover());
+
+                            let is_in_viewport = visible_range.is_some_and(|r| {
+                                page_idx >= r.first_visible && page_idx <= r.last_visible
                             });
+
+                            if is_in_viewport {
+                                let painter = ui.painter();
+                                painter.rect_filled(rect, CornerRadius::ZERO, Color32::WHITE);
+
+                                if let Some(texture) =
+                                    self.texture_cache.get(tab_id, page_idx, zoom_pct)
+                                {
+                                    let uv = Rect::from_min_max(
+                                        Pos2::new(0.0, 0.0),
+                                        Pos2::new(1.0, 1.0),
+                                    );
+                                    painter.image(texture.id(), rect, uv, Color32::WHITE);
+                                } else {
+                                    painter.text(
+                                        rect.center(),
+                                        egui::Align2::CENTER_CENTER,
+                                        format!("Page {}…", page_idx + 1),
+                                        FontId::proportional(14.0),
+                                        Color32::from_rgb(130, 135, 145),
+                                    );
+                                }
+
+                                painter.rect_stroke(
+                                    rect,
+                                    CornerRadius::ZERO,
+                                    Stroke::new(1.0_f32, Color32::from_rgb(15, 16, 18)),
+                                    StrokeKind::Outside,
+                                );
+                            }
+
+                            ui.add_space(PAGE_SPACING);
                         }
-                    }
-                }
-            }
-
-            ui.vertical_centered(|ui| {
-                ui.spacing_mut().item_spacing.y = 0.0;
-                ui.add_space(PAGE_SPACING);
-
-                for (page_idx, &(w_pts, h_pts)) in page_dimensions.iter().enumerate() {
-                    let page_size = Vec2::new((w_pts * zoom).max(1.0), (h_pts * zoom).max(1.0));
-                    let (rect, _response) = ui.allocate_exact_size(page_size, Sense::hover());
-
-                    let is_in_viewport = visible_range.is_some_and(|r| {
-                        page_idx >= r.first_visible && page_idx <= r.last_visible
                     });
-
-                    if is_in_viewport {
-                        let painter = ui.painter();
-                        painter.rect_filled(rect, CornerRadius::ZERO, Color32::WHITE);
-
-                        if let Some(texture) =
-                            self.texture_cache.get(tab_id, page_idx, zoom_pct)
-                        {
-                            let uv = Rect::from_min_max(Pos2::new(0.0, 0.0), Pos2::new(1.0, 1.0));
-                            painter.image(texture.id(), rect, uv, Color32::WHITE);
-                        } else {
-                            painter.text(
-                                rect.center(),
-                                egui::Align2::CENTER_CENTER,
-                                format!("Page {}…", page_idx + 1),
-                                FontId::proportional(14.0),
-                                Color32::from_rgb(130, 135, 145),
-                            );
-                        }
-
-                        painter.rect_stroke(
-                            rect,
-                            CornerRadius::ZERO,
-                            Stroke::new(1.0_f32, Color32::from_rgb(15, 16, 18)),
-                            StrokeKind::Outside,
-                        );
-                    }
-
-                    ui.add_space(PAGE_SPACING);
-                }
-            });
-        });
+                })
+            })
+            .inner;
 
         self.tabs[tab_idx].scroll_offset = scroll_out.state.offset.y;
     }
