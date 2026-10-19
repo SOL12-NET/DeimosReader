@@ -43,9 +43,10 @@ Both the **Setup Installer** and the **Standalone Portable Edition** are availab
 Modern PDF readers have grown into hundreds-of-megabytes suites bundling web browsers, JavaScript runtimes, cloud telemetry, and bloated editing toolbars. **Deimos Reader** takes the exact opposite engineering approach:
 
 ### What Deimos Reader Does
-- **Instant Opening, High-FPS Virtual Scrolling & Precision Zoom**: Smoothly navigate documents from 1 to 10,000+ pages with `25%` to `400%` scaling (`5%` precision steps on `Ctrl + Mouse Wheel`).
+- **Instant Opening, High-FPS Virtual Scrolling & Precision Zoom**: Smoothly navigate documents from 1 to 10,000+ pages with `25%` to `400%` scaling (`5%` precision steps on `Ctrl + Mouse Wheel`) and a high-contrast SOL12 Orange (`#F97316`) vertical scrollbar.
 - **Fluid Multi-Tab Workspace**: Open, switch, and compare multiple PDF documents simultaneously with Drag & Drop support.
 - **Native Encrypted PDF Decryption**: Full support for password-protected PDFs (`RC4`, `AES-128`, `AES-256`) with automatic empty-password (`""`) unlocking for owner-restricted files and immediate RAM scrubbing via [`zeroize`](https://crates.io/crates/zeroize).
+- **Signature SOL12 Software Visual Identity**: Dark-theme interface featuring the static high-resolution Mars emblem, **Orbitron Bold (700)** title typography, **`SOL12 Software`** (`Version 0.6 Beta`) branding, and a built-in Open Source **Licenses** viewer.
 
 ### What Deimos Reader Strictly Excludes
 - **No WebView / Electron / Tauri**: 100% native GPU-rendered immediate-mode GUI (`eframe` / `egui`).
