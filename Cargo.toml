@@ -3,7 +3,7 @@ name = "deimos-reader"
 version = "0.6.0-beta"
 edition = "2021"
 description = "Ultra-lightweight, fast, and memory-safe Open Source desktop PDF reader (Windows & Linux)"
-license = "MIT"
+license = "GPL-3.0-only"
 readme = "README.md"
 repository = "https://github.com/SOL12-NET/DeimosReader"
 
