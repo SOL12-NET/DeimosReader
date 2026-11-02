@@ -19,8 +19,18 @@ use crate::worker::{PdfWorkerHandle, RenderRequest, RenderResponse};
 /// Current application version displayed on the welcome screen and in the Licenses window.
 pub const APP_VERSION_LABEL: &str = "Version 0.6 Beta";
 
-/// Embedded MIT License of Deimos Reader.
-const DEIMOS_MIT_LICENSE: &str = include_str!("../LICENSE");
+/// Embedded license text of Deimos Reader (GNU GPL version 3, GPL-3.0-only).
+const DEIMOS_LICENSE_TEXT: &str = include_str!("../LICENSE");
+
+/// Copyright and license notice of Deimos Reader, displayed above the full license text.
+const DEIMOS_LICENSE_NOTICE: &str = "Copyright (C) 2026 SOL12.NET\n\n\
+Deimos Reader is free software: you can redistribute it and/or modify it under the terms of the \
+GNU General Public License version 3 as published by the Free Software Foundation (GPL-3.0-only).\n\n\
+Deimos Reader is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without \
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU \
+General Public License below for more details.\n\n\
+Releases up to and including v0.6 Beta were published under the MIT License; copies received \
+under that license remain under it.";
 
 /// Embedded Orbitron Bold (700) font matching the title typography of `ifconfig.sol12.net`.
 const ORBITRON_BOLD_TTF: &[u8] = include_bytes!("../assets/Orbitron-Bold.ttf");
@@ -44,12 +54,14 @@ struct ThirdPartyLicense {
 const THIRD_PARTY_LICENSES: &[ThirdPartyLicense] = &[
     ThirdPartyLicense {
         name: "PDFium",
-        version_or_author: "Google LLC / The Chromium Authors & Foxit Software Inc.",
-        license_name: "BSD 3-Clause / Apache-2.0",
+        version_or_author: "The PDFium Authors (binary build: bblanchon/pdfium-binaries)",
+        license_name: "BSD-3-Clause (portions Apache-2.0)",
         repository_url: "https://pdfium.googlesource.com/pdfium/",
-        notice: "Copyright 2014 The PDFium Authors. All rights reserved.\n\
-Redistribution and use in source and binary forms, with or without modification, are permitted \
-provided that the conditions of the 3-Clause BSD License are met.",
+        notice: "Copyright 2014 The PDFium Authors.\n\
+PDFium is licensed under the BSD 3-Clause License; Apache-licensed portions are under the Apache \
+License 2.0. The PDFium library bundles third-party libraries (FreeType, HarfBuzz, ICU, \
+libjpeg-turbo, OpenJPEG, Little CMS, libpng, zlib, Abseil, AGG and others) under their own \
+licenses; see the NOTICE file of the Deimos Reader source repository.",
     },
     ThirdPartyLicense {
         name: "pdfium-render",
@@ -110,18 +122,31 @@ Pure-Rust PNG decoder and encoder. Licensed under MIT or Apache-2.0.",
     },
     ThirdPartyLicense {
         name: "Orbitron Typeface",
-        version_or_author: "Matt McInerney / The League of Moveable Type",
+        version_or_author: "The Orbitron Project Authors / The League of Moveable Type",
         license_name: "SIL Open Font License 1.1 (OFL-1.1)",
         repository_url: "https://github.com/theleagueof/orbitron",
-        notice: "Copyright (c) 2009-2020 Matt McInerney (matt@pixelspread.com).\n\
+        notice: "Copyright 2018 The Orbitron Project Authors (https://github.com/theleagueof/orbitron), \
+with Reserved Font Name \"Orbitron\".\n\
 This Font Software is licensed under the SIL Open Font License, Version 1.1.",
     },
     ThirdPartyLicense {
         name: "Mars Surface Texture",
-        version_or_author: "Solar System Scope / NASA Goddard Space Flight Center",
+        version_or_author: "Solar System Scope / INOVE (based on NASA/USGS imagery)",
         license_name: "CC BY 4.0",
         repository_url: "https://www.solarsystemscope.com/textures/",
-        notice: "Mars equirectangular planetary map courtesy of Solar System Scope / NASA (Creative Commons Attribution 4.0 International).",
+        notice: "Mars logo and icon adapted from the Solar System Scope / INOVE Mars texture, based on \
+NASA/USGS imagery (Creative Commons Attribution 4.0 International). Adapted by SOL12.NET.",
+    },
+    ThirdPartyLicense {
+        name: "egui default fonts (epaint_default_fonts)",
+        version_or_author: "Source Foundry, Bitstream, Canonical, Google, John Slegers",
+        license_name: "MIT + Bitstream Vera / Ubuntu Font Licence 1.0 / OFL-1.1 / MIT",
+        repository_url: "https://github.com/emilk/egui/tree/master/crates/epaint_default_fonts",
+        notice: "Hack Regular: Copyright (c) 2018 Source Foundry Authors (MIT); based on Bitstream \
+Vera Sans Mono, Copyright (c) 2003 Bitstream, Inc. (Bitstream Vera License).\n\
+Ubuntu Light: Copyright 2011 Canonical Ltd. (Ubuntu Font Licence 1.0).\n\
+Noto Emoji: Copyright 2013 Google Inc. (SIL Open Font License 1.1).\n\
+emoji-icon-font: Copyright (c) 2014 John Slegers (MIT).",
     },
 ];
 
@@ -954,7 +979,7 @@ impl DeimosApp {
                 .min_size(Vec2::new(86.0, 26.0)),
             );
             if licenses_btn
-                .on_hover_text("View Deimos Reader MIT License and Open Source notices")
+                .on_hover_text("View the Deimos Reader license (GPL-3.0-only) and open source notices")
                 .clicked()
             {
                 self.show_licenses_window = true;
@@ -978,7 +1003,7 @@ impl DeimosApp {
         ui.visuals_mut().widgets.active.fg_stroke.color = orange_active;
     }
 
-    /// Renders the modal/floating window displaying the Deimos Reader MIT License and all
+    /// Renders the modal/floating window displaying the Deimos Reader license (GPL-3.0-only) and all
     /// third-party Open Source component licenses.
     fn render_licenses_window(&mut self, ctx: &egui::Context) {
         if !self.show_licenses_window {
@@ -1039,7 +1064,7 @@ impl DeimosApp {
                                 ui.visuals_mut().widgets.hovered.fg_stroke = default_hovered_fg;
                                 ui.visuals_mut().widgets.active.fg_stroke = default_active_fg;
 
-                                // Section 1: Deimos Reader MIT License
+                                // Section 1: Deimos Reader license (GPL-3.0-only)
                                 Frame::NONE
                                     .fill(Color32::from_rgb(22, 24, 28))
                                     .corner_radius(CornerRadius::same(6))
@@ -1048,14 +1073,20 @@ impl DeimosApp {
                                     .show(ui, |ui| {
                                         ui.set_width(ui.available_width());
                                         ui.label(
-                                            RichText::new("Deimos Reader — MIT License")
+                                            RichText::new("Deimos Reader — GNU General Public License v3.0 only")
                                                 .size(14.5)
                                                 .strong()
                                                 .color(Color32::from_rgb(249, 115, 22)),
                                         );
                                         ui.add_space(6.0);
                                         ui.label(
-                                            RichText::new(DEIMOS_MIT_LICENSE.trim())
+                                            RichText::new(DEIMOS_LICENSE_NOTICE)
+                                                .size(12.5)
+                                                .color(Color32::from_rgb(225, 228, 235)),
+                                        );
+                                        ui.add_space(8.0);
+                                        ui.label(
+                                            RichText::new(DEIMOS_LICENSE_TEXT.trim())
                                                 .monospace()
                                                 .size(12.0)
                                                 .color(Color32::from_rgb(205, 210, 220)),

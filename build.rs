@@ -15,7 +15,7 @@ fn main() {
             "Deimos Reader - Ultra-Lightweight PDF Reader (v0.6 Beta)",
         );
         res.set("CompanyName", "SOL12.NET");
-        res.set("LegalCopyright", "Copyright (c) 2026 SOL12.NET (MIT License)");
+        res.set("LegalCopyright", "Copyright (C) 2026 SOL12.NET (GPL-3.0-only)");
         let _ = res.compile();
     }
 }
