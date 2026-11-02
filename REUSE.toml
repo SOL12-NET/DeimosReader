@@ -1,0 +1,34 @@
+version = 1
+SPDX-PackageName = "DeimosReader"
+SPDX-PackageSupplier = "SOL12.NET"
+SPDX-PackageDownloadLocation = "https://github.com/SOL12-NET/DeimosReader"
+
+# Original Deimos Reader source code: GPL-3.0-only (aggregate base; exceptions below override it).
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 SOL12.NET"
+SPDX-License-Identifier = "GPL-3.0-only"
+
+# Third-party font (SIL Open Font License 1.1), copyright as stated in the font's name table.
+[[annotations]]
+path = ["assets/Orbitron-Bold.ttf"]
+precedence = "override"
+SPDX-FileCopyrightText = "2018 The Orbitron Project Authors (https://github.com/theleagueof/orbitron)"
+SPDX-License-Identifier = "OFL-1.1"
+
+# Mars logo, icon and banner: adapted from the Solar System Scope / INOVE Mars texture
+# (CC BY 4.0, based on NASA/USGS imagery); attribution is kept here and in NOTICE.
+[[annotations]]
+path = ["assets/mars_logo.png", "assets/mars_icon.ico", "assets/deimos_reader_banner.png"]
+precedence = "override"
+SPDX-FileCopyrightText = "Solar System Scope / INOVE (based on NASA/USGS imagery); adapted 2026 SOL12.NET"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# Historical v0.6 Beta binaries, published under MIT. They bundle third-party components
+# whose notices are not shipped in the archives (see NOTICE, sections 0 and 6).
+[[annotations]]
+path = ["releases/**"]
+precedence = "override"
+SPDX-FileCopyrightText = ["2026 SOL12.NET", "Third-party components bundled in the release archives, see NOTICE"]
+SPDX-License-Identifier = "MIT AND LicenseRef-SOL12-Unresolved"
