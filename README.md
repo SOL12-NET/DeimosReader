@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/badge/Version-0.6_Beta-F97316?style=for-the-badge)](https://github.com/SOL12-NET/DeimosReader/tree/main/releases)
 [![Rust](https://img.shields.io/badge/Rust-2021_Edition-000000?style=for-the-badge&logo=rust&logoColor=white)](Cargo.toml)
 [![Memory Safety](https://img.shields.io/badge/Unsafe_Code-Forbidden-10B981?style=for-the-badge)](src/main.rs)
-[![License](https://img.shields.io/badge/License-MIT-3B82F6?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0--only-3B82F6?style=for-the-badge)](LICENSE)
 
 **An ultra-lightweight, blazingly fast, and memory-safe Open Source desktop PDF reader engineered in Rust.**  
 *Zero web engines • Zero telemetry • Zero bloat • Hardware-accelerated GPU rendering • Cryptographic RAM hygiene*
@@ -107,7 +107,10 @@ Every open document tab (`TabId`) is governed by a deterministic state machine (
 ```text
 ├── Cargo.toml                 # Dependencies & fat-LTO Release profile
 ├── build.rs                   # Embeds high-res Mars icon & version info into Windows PE
-├── LICENSE                    # MIT License
+├── LICENSE                    # GNU General Public License v3.0 (GPL-3.0-only)
+├── LICENSES/                  # License texts referenced in REUSE.toml
+├── NOTICE                     # Third-party components, earlier MIT releases, unresolved items
+├── REUSE.toml                 # Per-file license and copyright metadata (REUSE)
 ├── README.md                  # Project documentation
 ├── assets/
 │   ├── deimos_reader_banner.png # Project header banner (Mars logo + Orbitron Bold)
@@ -174,16 +177,23 @@ strip = "symbols"
 
 ## 📜 License & Open Source Attributions
 
-**Deimos Reader** is released under the **[MIT License](LICENSE)** (`Copyright (c) 2026 SOL12.NET`).
+Deimos Reader source code is released under the **GNU General Public License version 3 only** ([GPL-3.0-only](LICENSE)), except where explicitly stated otherwise. Copyright (C) 2026 SOL12.NET.
 
- All third-party open-source licenses and attributions can be inspected directly inside the application via the **Licenses** button in the bottom-right corner of the welcome screen:
-- **PDFium** — BSD 3-Clause / Apache-2.0 (`Google LLC / The Chromium Authors`)
+Third-party components retain their respective licenses. Per-file license and copyright metadata follows the [REUSE specification](https://reuse.software/spec/) and is declared in [REUSE.toml](REUSE.toml). Third-party components and resources that are not covered by the GPL are listed in [NOTICE](NOTICE). The GPL does not grant any right over the SOL12 name, marks and logos.
+
+**Earlier releases:** Deimos Reader up to and including **v0.6 Beta**, including the binaries in [`releases/`](releases/), was published under the **MIT License**. Anyone who received those copies under the MIT License keeps the rights that license grants for them. The source code from this point on, and releases built from it, are distributed under GPL-3.0-only.
+
+Third-party open-source licenses and attributions can also be inspected inside the application via the **Licenses** button in the bottom-right corner of the welcome screen:
+- **PDFium** — BSD-3-Clause, Apache-licensed portions under Apache-2.0 (`The PDFium Authors`); prebuilt binaries from [`bblanchon/pdfium-binaries`](https://github.com/bblanchon/pdfium-binaries), which bundle further third-party libraries listed in [NOTICE](NOTICE)
 - **pdfium-render** — MIT / Apache-2.0 (`Alastair Carey`)
 - **egui & eframe** — MIT / Apache-2.0 (`Emil Ernerfeldt & Rerun Technologies AB`)
+- **egui default fonts** — Hack (MIT + Bitstream Vera License), Ubuntu Light (Ubuntu Font Licence 1.0), Noto Emoji (OFL-1.1), emoji-icon-font (MIT)
 - **rfd (Rusty File Dialog)** — MIT (`PolyMeilex`)
 - **crossbeam-channel** — MIT / Apache-2.0 (`The Crossbeam Project Developers`)
 - **zeroize** — MIT / Apache-2.0 (`The RustCrypto Project Developers`)
 - **lru** — MIT (`Jerome Froelich`)
 - **png** — MIT / Apache-2.0 (`The image-rs Developers`)
-- **Orbitron Typeface** — SIL Open Font License 1.1 (`Matt McInerney`)
-- **Mars Surface Texture** — Creative Commons Attribution 4.0 (`Solar System Scope / NASA`)
+- **Orbitron Typeface** — SIL Open Font License 1.1 (`The Orbitron Project Authors`, Reserved Font Name "Orbitron")
+- **Mars logo, icon and banner** — Creative Commons Attribution 4.0, adapted from the Solar System Scope / INOVE Mars texture (based on NASA/USGS imagery)
+
+The complete list of Rust crates compiled into the application, with their licenses and copyright holders, is in [NOTICE](NOTICE).

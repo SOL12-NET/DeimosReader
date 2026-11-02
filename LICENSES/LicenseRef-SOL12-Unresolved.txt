@@ -1,0 +1,7 @@
+Resources with unconfirmed provenance or redistribution terms
+
+The files marked with this license reference are NOT covered by the GNU
+General Public License version 3 (GPL-3.0-only) of this repository. Their
+provenance or redistribution terms have not been confirmed yet, so no license
+is declared for them here. They are listed in the NOTICE file of this
+repository. Their terms will be resolved and documented separately.
